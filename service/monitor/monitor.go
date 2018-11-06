@@ -176,10 +176,10 @@ func (m *monitor) dispatchEvents(key string, l log.Logger, i sd.Instancer) {
 			}
 
 			if sdEvent.Err != nil {
-				logger.Log(level.Key(), level.ErrorValue(), logging.MessageKey(), "service discovery error", logging.ErrorKey(), sdEvent.Err)
+				logging.Error(logger).Log(logging.MessageKey(), "service discovery error", logging.ErrorKey(), sdEvent.Err)
 				event.Err = sdEvent.Err
 			} else {
-				logger.Log(level.Key(), level.ErrorValue(), logging.MessageKey(), "service discovery update", "instances", sdEvent.Instances)
+				logging.Error(logger).Log(logging.MessageKey(), "service discovery update", "instances", sdEvent.Instances)
 				if len(sdEvent.Instances) > 0 {
 					event.Instances = m.filter(sdEvent.Instances)
 				}
@@ -188,12 +188,12 @@ func (m *monitor) dispatchEvents(key string, l log.Logger, i sd.Instancer) {
 			m.listeners.MonitorEvent(event)
 
 		case <-m.stopped:
-			logger.Log(level.Key(), level.InfoValue(), logging.MessageKey(), "subscription monitor was stopped")
+			logging.Info(logger).Log(logging.MessageKey(), "subscription monitor was stopped")
 			m.listeners.MonitorEvent(Event{Key: key, Instancer: i, EventCount: eventCount, Stopped: true})
 			return
 
 		case <-m.closed:
-			logger.Log(level.Key(), level.InfoValue(), logging.MessageKey(), "subscription monitor exiting due to external closure")
+			logging.Info(logger).Log(logging.MessageKey(), "subscription monitor exiting due to external closure")
 			m.Stop() // ensure that the Stopped state is correct
 			m.listeners.MonitorEvent(Event{Key: key, Instancer: i, EventCount: eventCount, Stopped: true})
 			return

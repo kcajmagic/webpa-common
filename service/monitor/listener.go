@@ -7,7 +7,6 @@ import (
 	"github.com/Comcast/webpa-common/logging"
 	"github.com/Comcast/webpa-common/service"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/metrics/provider"
 	"github.com/go-kit/kit/sd"
 )
@@ -142,7 +141,7 @@ func NewRegistrarListener(logger log.Logger, r sd.Registrar, initiallyRegistered
 			message = "deregistering due to monitor being stopped"
 		} else {
 			if atomic.CompareAndSwapUint32(&state, stateDeregistered, stateRegistered) {
-				logger.Log(level.Key(), level.InfoValue(), logging.MessageKey(), "registering on service discovery update")
+				logging.Info(logger).Log(logging.MessageKey(), "registering on service discovery update")
 				r.Register()
 			}
 
@@ -150,7 +149,7 @@ func NewRegistrarListener(logger log.Logger, r sd.Registrar, initiallyRegistered
 		}
 
 		if atomic.CompareAndSwapUint32(&state, stateRegistered, stateDeregistered) {
-			logger.Log(level.Key(), level.ErrorValue(), logging.MessageKey(), message, logging.ErrorKey(), e.Err, "stopped", e.Stopped)
+			logging.Error(logger).Log(logging.MessageKey(), message, logging.ErrorKey(), e.Err, "stopped", e.Stopped)
 			r.Deregister()
 		}
 	})
