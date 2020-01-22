@@ -30,6 +30,7 @@ require (
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/jtacoma/uritemplates v1.0.0
 	github.com/justinas/alice v0.0.0-20171023064455-03f45bd4b7da
+	github.com/lithammer/shortuuid/v3 v3.0.4
 	github.com/miekg/dns v1.0.14
 	github.com/mitchellh/go-homedir v1.0.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect

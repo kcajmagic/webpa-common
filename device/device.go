@@ -13,6 +13,8 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/xmidt-org/webpa-common/logging"
+
+	"github.com/lithammer/shortuuid/v3"
 )
 
 const (
@@ -96,6 +98,9 @@ type Interface interface {
 	// SatClientID returns the SAT JWT token passed when the device connected
 	SatClientID() string
 
+	// SessionID returns a UUID to identify the websocket session of the device
+	SessionID() string
+
 	// Trust returns the trust level of this device
 	Trust() string
 
@@ -127,6 +132,7 @@ type device struct {
 
 	partnerIDs  []string
 	satClientID string
+	sessionID   string
 
 	trust string
 
@@ -180,6 +186,7 @@ func newDevice(o deviceOptions) *device {
 		transactions: NewTransactions(),
 		partnerIDs:   partnerIDs,
 		satClientID:  o.SatClientID,
+		sessionID:    shortuuid.New(),
 		trust:        o.Trust,
 	}
 }
@@ -335,6 +342,10 @@ func (d *device) PartnerIDs() []string {
 
 func (d *device) SatClientID() string {
 	return d.satClientID
+}
+
+func (d *device) SessionID() string {
+	return d.sessionID
 }
 
 func (d *device) Trust() string {
