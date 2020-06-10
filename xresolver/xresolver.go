@@ -3,6 +3,8 @@ package xresolver
 import (
 	"context"
 	"errors"
+	"github.com/go-kit/kit/log"
+	"github.com/xmidt-org/webpa-common/logging"
 	"net"
 	"strconv"
 	"sync"
@@ -16,9 +18,10 @@ type resolver struct {
 	resolvers map[Lookup]bool
 	lock      sync.RWMutex
 	dialer    net.Dialer
+	logger    log.Logger
 }
 
-func NewResolver(dialer net.Dialer, lookups ...Lookup) Resolver {
+func NewResolver(dialer net.Dialer, logger log.Logger, lookups ...Lookup) Resolver {
 	r := &resolver{
 		resolvers: make(map[Lookup]bool),
 		dialer:    dialer,
@@ -87,6 +90,8 @@ func (resolve *resolver) DialContext(ctx context.Context, network, addr string) 
 	con, err = resolve.createConnection(routes, network, port)
 	if err == nil {
 		return
+	} else {
+		logging.Error(resolve.logger).Log("createConnection: failed to create connection", logging.ErrorKey(), err)
 	}
 
 	// if no connection, create using the default dialer
@@ -94,6 +99,7 @@ func (resolve *resolver) DialContext(ctx context.Context, network, addr string) 
 }
 
 func (resolve *resolver) createConnection(routes []Route, network, port string) (con net.Conn, err error) {
+	logging.Debug(resolve.logger).Log(logging.MessageKey(), "resolver create connection", "routes", routes, "network", network, "port", port)
 	for _, route := range routes {
 		portUsed := port
 		if route.Port != 0 {
@@ -102,6 +108,8 @@ func (resolve *resolver) createConnection(routes []Route, network, port string) 
 		con, err = resolve.dialer.Dial(network, net.JoinHostPort(route.Host, portUsed))
 		if err == nil {
 			return
+		}else {
+			logging.Error(resolve.logger).Log("failed to dial connection", logging.ErrorKey(), err)
 		}
 	}
 	return nil, errors.New("failed to create connection from routes")

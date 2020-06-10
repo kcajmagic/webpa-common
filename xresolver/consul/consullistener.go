@@ -35,7 +35,7 @@ func NewConsulWatcher(o Options) *ConsulWatcher {
 	}
 
 	watcher := &ConsulWatcher{
-		logger: logging.Debug(o.Logger),
+		logger: log.WithPrefix(o.Logger, "component", "consulwatcher"),
 
 		config: o,
 
