@@ -22,9 +22,14 @@ type resolver struct {
 }
 
 func NewResolver(dialer net.Dialer, logger log.Logger, lookups ...Lookup) Resolver {
+	if logger == nil {
+		logger = logging.DefaultLogger()
+	}
+
 	r := &resolver{
 		resolvers: make(map[Lookup]bool),
 		dialer:    dialer,
+		logger:    logger,
 	}
 
 	for _, lookup := range lookups {
@@ -108,7 +113,7 @@ func (resolve *resolver) createConnection(routes []Route, network, port string) 
 		con, err = resolve.dialer.Dial(network, net.JoinHostPort(route.Host, portUsed))
 		if err == nil {
 			return
-		}else {
+		} else {
 			logging.Error(resolve.logger).Log("failed to dial connection", logging.ErrorKey(), err)
 		}
 	}
