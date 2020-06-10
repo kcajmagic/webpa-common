@@ -87,9 +87,9 @@ func (watcher *ConsulWatcher) WatchService(watchURL string, service string) {
 		return
 	}
 
-	logging.Debug(watcher.logger).Log(logging.MessageKey(), "Watch Service", "url", watchURL, "service", service, "host", url.Host)
-	if _, found := watcher.watch[url.Host]; !found {
-		watcher.watch[url.Host] = service
+	logging.Debug(watcher.logger).Log(logging.MessageKey(), "Watch Service", "url", watchURL, "service", service, "host", url.Hostname())
+	if _, found := watcher.watch[url.Hostname()]; !found {
+		watcher.watch[url.Hostname()] = service
 		if _, found := watcher.balancers[service]; !found {
 			logging.Debug(watcher.logger).Log(logging.MessageKey(), "Creating round robin balancer", "url", url, "service", service)
 			watcher.balancers[service] = xresolver.NewRoundRobinBalancer()
