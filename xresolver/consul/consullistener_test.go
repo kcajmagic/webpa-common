@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/xmidt-org/webpa-common/logging"
 	"github.com/xmidt-org/webpa-common/service/monitor"
 	"github.com/xmidt-org/webpa-common/xresolver"
 	"io/ioutil"
@@ -44,7 +45,7 @@ func TestConsulWatcher(t *testing.T) {
 
 	client := &http.Client{
 		Transport: &http.Transport{
-			DialContext: xresolver.NewResolver(xresolver.DefaultDialer, watcher).DialContext,
+			DialContext: xresolver.NewResolver(xresolver.DefaultDialer, logging.NewTestLogger(nil, t), watcher).DialContext,
 			// note: DisableKeepAlives is required so when we do the request again we don't reuse the same connection.
 			DisableKeepAlives: true,
 		},

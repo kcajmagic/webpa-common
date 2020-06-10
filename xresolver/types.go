@@ -73,7 +73,6 @@ type RoundRobin struct {
 
 func NewRoundRobinBalancer() *RoundRobin {
 	return &RoundRobin{
-		lock:   sync.RWMutex{},
 		routes: make(map[string]*orderedRoute),
 	}
 }

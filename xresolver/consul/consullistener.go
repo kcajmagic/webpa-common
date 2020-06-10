@@ -2,11 +2,13 @@ package consul
 
 import (
 	"context"
+	"errors"
 	"github.com/go-kit/kit/log"
 	"github.com/xmidt-org/webpa-common/logging"
 	"github.com/xmidt-org/webpa-common/service/monitor"
 	"github.com/xmidt-org/webpa-common/xresolver"
 	"regexp"
+	"net/url"
 )
 
 var find = regexp.MustCompile("(.*)" + regexp.QuoteMeta("[") + "(.*)" + regexp.QuoteMeta("]") + regexp.QuoteMeta("{") + "(.*)" + regexp.QuoteMeta("}"))
@@ -44,6 +46,7 @@ func NewConsulWatcher(o Options) *ConsulWatcher {
 
 	if o.Watch != nil {
 		for url, service := range o.Watch {
+
 			watcher.WatchService(url, service)
 		}
 	}
@@ -77,10 +80,16 @@ func (watcher *ConsulWatcher) MonitorEvent(e monitor.Event) {
 	}
 }
 
-func (watcher *ConsulWatcher) WatchService(url string, service string) {
-	logging.Debug(watcher.logger).Log(logging.MessageKey(), "Watch Service", "url", url, "service", service)
-	if _, found := watcher.watch[url]; !found {
-		watcher.watch[url] = service
+func (watcher *ConsulWatcher) WatchService(watchURL string, service string) {
+	url, err := url.Parse(watchURL)
+	if err != nil{
+		logging.Error(watcher.logger).Log("Failed to parse url", "url", watchURL)
+		return
+	}
+
+	logging.Debug(watcher.logger).Log(logging.MessageKey(), "Watch Service", "url", watchURL, "service", service, "host", url.Host)
+	if _, found := watcher.watch[url.Host]; !found {
+		watcher.watch[url.Host] = service
 		if _, found := watcher.balancers[service]; !found {
 			logging.Debug(watcher.logger).Log(logging.MessageKey(), "Creating round robin balancer", "url", url, "service", service)
 			watcher.balancers[service] = xresolver.NewRoundRobinBalancer()
@@ -89,6 +98,10 @@ func (watcher *ConsulWatcher) WatchService(url string, service string) {
 }
 
 func (watcher *ConsulWatcher) LookupRoutes(ctx context.Context, host string) ([]xresolver.Route, error) {
+	if _, found := watcher.config.Watch[host]; !found {
+		logging.Error(watcher.logger).Log(logging.MessageKey(), "LookupRoutes: host not found in config", "host", host)
+		return []xresolver.Route{}, errors.New(host + " is not part of the consul listener")
+	}
 	records, err := watcher.balancers[watcher.config.Watch[host]].Get()
 	logging.Debug(watcher.logger).Log(logging.MessageKey(), "looking up routes", "routes", records, logging.ErrorKey(), err)
 	return records, err
