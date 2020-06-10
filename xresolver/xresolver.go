@@ -70,6 +70,7 @@ func (resolve *resolver) getRoutes(ctx context.Context, host string) []Route {
 	routes := make([]Route, 0)
 	for r := range resolve.resolvers {
 		tempRoutes, err := r.LookupRoutes(ctx, host)
+		logging.Debug(resolve.logger).Log(logging.MessageKey(), "completed Lookup", "temp route", tempRoutes, "err", err)
 		if err == nil {
 			routes = append(routes, tempRoutes...)
 		}
@@ -79,6 +80,7 @@ func (resolve *resolver) getRoutes(ctx context.Context, host string) []Route {
 }
 
 func (resolve *resolver) DialContext(ctx context.Context, network, addr string) (con net.Conn, err error) {
+	logging.Debug(resolve.logger).Log(logging.MessageKey(), "Dialing", "network", network, "addr", addr)
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
@@ -96,9 +98,10 @@ func (resolve *resolver) DialContext(ctx context.Context, network, addr string) 
 	if err == nil {
 		return
 	} else {
-		logging.Error(resolve.logger).Log("createConnection: failed to create connection", logging.ErrorKey(), err)
+		logging.Error(resolve.logger).Log(logging.MessageKey(), "createConnection: failed to create connection", logging.ErrorKey(), err)
 	}
 
+	logging.Info(resolve.logger).Log(logging.MessageKey(), "using default address")
 	// if no connection, create using the default dialer
 	return resolve.dialer.DialContext(ctx, network, addr)
 }

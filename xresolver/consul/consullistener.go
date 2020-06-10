@@ -79,9 +79,11 @@ func (watcher *ConsulWatcher) MonitorEvent(e monitor.Event) {
 }
 
 func (watcher *ConsulWatcher) WatchService(url string, service string) {
+	logging.Debug(watcher.logger).Log(logging.MessageKey(), "Watch Service", "url", url, "service", service)
 	if _, found := watcher.watch[url]; !found {
 		watcher.watch[url] = service
 		if _, found := watcher.balancers[service]; !found {
+			logging.Debug(watcher.logger).Log(logging.MessageKey(), "Creating round robin balancer", "url", url, "service", service)
 			watcher.balancers[service] = xresolver.NewRoundRobinBalancer()
 		}
 	}
@@ -89,6 +91,7 @@ func (watcher *ConsulWatcher) WatchService(url string, service string) {
 
 func (watcher *ConsulWatcher) LookupRoutes(ctx context.Context, host string) ([]xresolver.Route, error) {
 	if _, found := watcher.config.Watch[host]; !found {
+		logging.Error(watcher.logger).Log(logging.MessageKey(), "LookupRoutes: host not found in config", "host", host)
 		return []xresolver.Route{}, errors.New(host + " is not part of the consul listener")
 	}
 	records, err := watcher.balancers[watcher.config.Watch[host]].Get()
