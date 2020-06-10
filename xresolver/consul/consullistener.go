@@ -53,7 +53,7 @@ func NewConsulWatcher(o Options) *ConsulWatcher {
 }
 
 func (watcher *ConsulWatcher) MonitorEvent(e monitor.Event) {
-	logging.Debug(watcher.logger, logging.MessageKey(), "received update route event", "event", e)
+	logging.Debug(watcher.logger).Log(logging.MessageKey(), "received update route event", "event", e)
 
 	// update balancers
 	str := find.FindStringSubmatch(e.Key)
@@ -68,13 +68,13 @@ func (watcher *ConsulWatcher) MonitorEvent(e monitor.Event) {
 			// find records
 			route, err := xresolver.CreateRoute(instance)
 			if err != nil {
-				logging.Error(watcher.logger, logging.MessageKey(), "failed to create route", logging.MessageKey(), err, "instance", instance)
+				logging.Error(watcher.logger).Log(logging.MessageKey(), "failed to create route", logging.MessageKey(), err, "instance", instance)
 				continue
 			}
 			routes[index] = route
 		}
 		rr.Update(routes)
-		logging.Info(watcher.logger, logging.MessageKey(), "updating routes", "service", service, "new-routes", routes)
+		logging.Info(watcher.logger).Log(logging.MessageKey(), "updating routes", "service", service, "new-routes", routes)
 	}
 }
 
@@ -92,6 +92,6 @@ func (watcher *ConsulWatcher) LookupRoutes(ctx context.Context, host string) ([]
 		return []xresolver.Route{}, errors.New(host + " is not part of the consul listener")
 	}
 	records, err := watcher.balancers[watcher.config.Watch[host]].Get()
-	logging.Debug(watcher.logger, logging.MessageKey(), "looking up routes", "routes", records, logging.ErrorKey(), err)
+	logging.Debug(watcher.logger).Log(logging.MessageKey(), "looking up routes", "routes", records, logging.ErrorKey(), err)
 	return records, err
 }
