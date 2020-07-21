@@ -152,6 +152,7 @@ func newInstancers(l log.Logger, c Client, co Options) (i service.Instancers, er
 
 			for _, datacenter := range datacenters {
 				w.QueryOptions.Datacenter = datacenter
+				w.AllDatacenters = false
 				key := newInstancerKey(w)
 				if i.Has(key) {
 					l.Log(level.Key(), level.WarnValue(), logging.MessageKey(), "skipping duplicate watch", "service", w.Service, "tags", w.Tags, "passingOnly", w.PassingOnly, "datacenter", w.QueryOptions.Datacenter)
