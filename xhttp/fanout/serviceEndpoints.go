@@ -35,6 +35,7 @@ func (se *ServiceEndpoints) FanoutURLs(original *http.Request) ([]*url.URL, erro
 	se.lock.RLock()
 	endpoints := make([]string, 0, len(se.accessors))
 	for _, a := range se.accessors {
+		logging.Info(logging.DefaultLogger()).Log(logging.MessageKey(), "FanoutURLs", "a", a)
 		e, err := a.Get(hashKey)
 		if err != nil {
 			se.lock.RUnlock()
