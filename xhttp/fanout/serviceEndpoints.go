@@ -1,6 +1,7 @@
 package fanout
 
 import (
+	"github.com/xmidt-org/webpa-common/logging"
 	"net/http"
 	"net/url"
 	"sync"
@@ -50,6 +51,7 @@ func (se *ServiceEndpoints) FanoutURLs(original *http.Request) ([]*url.URL, erro
 // MonitorEvent supplies the monitor.Listener behavior.  An accessor is created and stored under
 // the event Key.
 func (se *ServiceEndpoints) MonitorEvent(e monitor.Event) {
+	logging.Info(logging.DefaultLogger()).Log(logging.MessageKey(), "monitor event", "e", e)
 	accessor := se.accessorFactory(e.Instances)
 	se.lock.Lock()
 	se.accessors[e.Key] = accessor
