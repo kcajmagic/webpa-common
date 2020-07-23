@@ -46,7 +46,6 @@ func (se *ServiceEndpoints) FanoutURLs(original *http.Request) ([]*url.URL, erro
 			if se.logger != nil {
 				se.logger.Log(level.Key(), level.DebugValue(), "component", "ServiceEndpoints", logging.MessageKey(), "get failed", "err", err, "e", e)
 			}
-			se.lock.RUnlock()
 			continue
 		}
 
