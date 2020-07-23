@@ -1,6 +1,9 @@
 package fanout
 
 import (
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/xmidt-org/webpa-common/logging"
 	"net/http"
 	"net/url"
 	"sync"
@@ -20,6 +23,7 @@ type ServiceEndpoints struct {
 	keyFunc         servicehttp.KeyFunc
 	accessorFactory service.AccessorFactory
 	accessors       map[string]service.Accessor
+	logger          log.Logger
 }
 
 // FanoutURLs uses the currently available discovered endpoints to produce a set of URLs.
@@ -33,23 +37,35 @@ func (se *ServiceEndpoints) FanoutURLs(original *http.Request) ([]*url.URL, erro
 
 	se.lock.RLock()
 	endpoints := make([]string, 0, len(se.accessors))
+	if se.logger != nil {
+		se.logger.Log(level.Key(), level.DebugValue(), "component", "ServiceEndpoints", logging.MessageKey(), "begin fanout", "accessor-length", len(se.accessors))
+	}
 	for _, a := range se.accessors {
 		e, err := a.Get(hashKey)
 		if err != nil {
+			if se.logger != nil {
+				se.logger.Log(level.Key(), level.DebugValue(), "component", "ServiceEndpoints", logging.MessageKey(), "get failed", "err", err, "e", e)
+			}
 			se.lock.RUnlock()
-			return nil, err
+			continue
 		}
 
 		endpoints = append(endpoints, e)
 	}
 
 	se.lock.RUnlock()
+	if se.logger != nil {
+		se.logger.Log(level.Key(), level.DebugValue(), "component", "ServiceEndpoints", logging.MessageKey(), "found endpoints", "endpoints", endpoints)
+	}
 	return xhttp.ApplyURLParser(url.Parse, endpoints...)
 }
 
 // MonitorEvent supplies the monitor.Listener behavior.  An accessor is created and stored under
 // the event Key.
 func (se *ServiceEndpoints) MonitorEvent(e monitor.Event) {
+	if se.logger != nil {
+		se.logger.Log(level.Key(), level.DebugValue(), "component", "ServiceEndpoints", logging.MessageKey(), "received event update", "instances", e.Instances, "key", e.Key, "e", e)
+	}
 	accessor := se.accessorFactory(e.Instances)
 	se.lock.Lock()
 	se.accessors[e.Key] = accessor
@@ -67,6 +83,16 @@ func WithKeyFunc(kf servicehttp.KeyFunc) ServiceEndpointsOption {
 			se.keyFunc = kf
 		} else {
 			se.keyFunc = device.IDHashParser
+		}
+	}
+}
+
+func WithLogger(logger log.Logger) ServiceEndpointsOption {
+	return func(se *ServiceEndpoints) {
+		if logger != nil {
+			se.logger = logger
+		} else {
+			se.logger = logging.DefaultLogger()
 		}
 	}
 }
